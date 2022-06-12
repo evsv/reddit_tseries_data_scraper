@@ -35,15 +35,16 @@ def init_db(db_file):
     create_sub_admin_tbl = """CREATE TABLE IF NOT EXISTS submission_admin (
                                 sub_id            string PRIMARY KEY,
                                 subreddit         string,
-                                date_first_polled string,
-                                date_last_polled  string); """
+                                ts_first_polled string,
+                                ts_last_polled  string); """
     
     create_sub_data_table = """CREATE TABLE IF NOT EXISTS submission_data (
-                                sub_id    string PRIMARY KEY,
-                                ts_poll   string,
-                                num_ups   int,
-                                num_downs int,
-                                num_comms int); """
+                                sub_id         string PRIMARY KEY,
+                                ts_last_polled string,
+                                num_ups        int,
+                                up_ratio       int,
+                                num_comms      int, 
+                                is_sub_locked  string); """
     
     db_conn = init_db_file(db_file)
 
