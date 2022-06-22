@@ -50,6 +50,9 @@ def proc_existing_submissions(subreddit_to_poll, db_connection, rdt_scraper,
     admin_recs_qry = """SELECT * FROM {} 
                         WHERE subreddit =\"{}\" """.format(admin_recs_tname, subreddit_to_poll)
     admin_recs_table = pd.read_sql_query(admin_recs_qry, db_connection)
+    if len(admin_recs_table.index.values) == 0:
+        print("No valid existing records in subreddit {} at poll time {}".format(subreddit_to_poll, poll_datetime))
+
     sub_ids = admin_recs_table["sub_id"]
 
     # POLLING THE EXISTING SUBMISSIONS
