@@ -27,7 +27,7 @@ def proc_new_submissions(subs, existing_sub_ids, subs_subreddit, db_connection,
     # DROPPING SUBMISSIONS WHICH ARE ALREADY ENTERED AND ARE REPOLLED
     print(new_sub_info_df["sub_id"])
     new_sub_info_df = new_sub_info_df.loc[~new_sub_info_df["sub_id"].isin(existing_sub_ids), :]
-    if len(new_sub_info_df.index.values == 0):
+    if len(new_sub_info_df.index.values) == 0:
         print("No new submissions were found at poll {}".format(poll_datetime))
         return None
 
