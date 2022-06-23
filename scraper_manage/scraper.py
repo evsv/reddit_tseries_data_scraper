@@ -26,10 +26,10 @@ def proc_new_submissions(subs, existing_sub_ids, subs_subreddit, db_connection,
     new_sub_info_df["ts_last_polled"] = poll_datetime
 
     # DROPPING SUBMISSIONS WHICH ARE ALREADY ENTERED AND ARE REPOLLED
-    print(new_sub_info_df["sub_id"])
+
     new_sub_info_df = new_sub_info_df.loc[~new_sub_info_df["sub_id"].isin(existing_sub_ids), :]
     if len(new_sub_info_df.index.values) == 0:
-        print("No new submissions were found at poll {}".format(poll_datetime))
+        print("No new submissions were found at poll {} in subreddit {}".format(poll_datetime, subs_subreddit))
         return None
 
     # CREATING THE TABLES TO WRITE
@@ -73,7 +73,7 @@ def proc_existing_submissions(subreddit_to_poll, db_connection, rdt_scraper,
                        SET ts_last_polled = \"{}\"
                      WHERE sub_id in ({});""".format(admin_recs_tname, poll_datetime,
                                                     subs_to_update)
-    print(update_sql)
+
     curs = db_connection.cursor()
     curs.execute(update_sql)
     db_connection.commit()
