@@ -1,6 +1,7 @@
 from asyncore import poll
 import praw
 import pandas as pd
+import datetime
 from datetime import datetime as dt
 
 def init_scraper(client_id, client_secret, user_agent):
@@ -44,11 +45,13 @@ def proc_new_submissions(subs, existing_sub_ids, subs_subreddit, db_connection,
     return None
 
 def proc_existing_submissions(subreddit_to_poll, db_connection, rdt_scraper, 
-                              admin_recs_tname, sub_info_tname, poll_datetime):
+                              admin_recs_tname, sub_info_tname, poll_datetime,
+                              poll_until):
 
     # GETTING EXISTING SUBMISSIONS ADMIN INFO 
     admin_recs_qry = """SELECT * FROM {} 
-                        WHERE subreddit =\"{}\" """.format(admin_recs_tname, subreddit_to_poll)
+                        WHERE subreddit =\"{}\" AND 
+                              ts_first_polled >= \"{}\";""".format(admin_recs_tname, subreddit_to_poll, poll_until)
     admin_recs_table = pd.read_sql_query(admin_recs_qry, db_connection)
     if len(admin_recs_table.index.values) == 0:
         print("No valid existing records in subreddit {} at poll time {}".format(subreddit_to_poll, poll_datetime))
@@ -82,9 +85,11 @@ def proc_existing_submissions(subreddit_to_poll, db_connection, rdt_scraper,
     return sub_ids
 
 def poll_subreddit(subreddit_to_poll, rdt_scraper, n_new_submissions,
-                   db_connection, admin_recs_tname, sub_info_tname):
+                   db_connection, admin_recs_tname, sub_info_tname,
+                   ndays_back_to_poll):
 
     poll_time = str(dt.now())
+    poll_until = str(dt.now()-datetime.timedelta(days=ndays_back_to_poll))
 
     # POLLING EXISTING SUBMISSIONS IN SELECTED SUBREDDIT
     existing_sub_ids = proc_existing_submissions(subreddit_to_poll=subreddit_to_poll,
@@ -92,7 +97,8 @@ def poll_subreddit(subreddit_to_poll, rdt_scraper, n_new_submissions,
                                                  rdt_scraper=rdt_scraper,
                                                  admin_recs_tname=admin_recs_tname, 
                                                  sub_info_tname=sub_info_tname, 
-                                                 poll_datetime=poll_time)
+                                                 poll_datetime=poll_time,
+                                                 poll_until=poll_until)
 
     # POLLING NEW SUBMISSIONS IN SELECTED SUBREDDIT
     new_posts = rdt_scraper.subreddit(subreddit_to_poll).new(limit = n_new_submissions)
