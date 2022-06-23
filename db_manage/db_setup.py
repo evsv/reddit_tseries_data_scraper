@@ -37,6 +37,7 @@ def init_db(db_file):
                                 subreddit         string,
                                 ts_first_polled   string,
                                 ts_last_polled    string,
+                                sub_title         string,
                                 sub_url           string); """
     
     create_sub_data_table = """CREATE TABLE IF NOT EXISTS submission_data (
