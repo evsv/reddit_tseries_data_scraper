@@ -1,5 +1,9 @@
 import json
 import scraper_manage.scraper as scrm
+import pandas as pd
+import sqlite3 as sql
+from datetime import datetime as dt
+import time
 
 if __name__ == "__main__":
 
@@ -16,3 +20,21 @@ if __name__ == "__main__":
                                     client_secret=auth_config["client_secret"],
                                     user_agent=auth_config["user_agent"])
 
+    db_conn = sql.connect("reddit_db/reddit_sub_info.db")
+
+    while True:
+        for sub in reddit_info_config["subreddits"]:
+
+            scrm.poll_subreddit(subreddit_to_poll=sub, 
+                                rdt_scraper=rdt_scraper, 
+                                title_keywords=reddit_info_config["keywords"],
+                                n_new_submissions=500,
+                                db_connection=db_conn, 
+                                admin_recs_tname="submission_admin", 
+                                sub_info_tname="submission_data",
+                                ndays_back_to_poll=reddit_info_config["poll_limit_days"])
+
+        print("TICK")
+        time.sleep(5*60)
+
+    db_conn.close()
