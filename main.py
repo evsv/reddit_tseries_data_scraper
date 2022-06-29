@@ -34,7 +34,7 @@ if __name__ == "__main__":
                                 sub_info_tname="submission_data",
                                 ndays_back_to_poll=reddit_info_config["poll_limit_days"])
 
-        print("TICK")
-        time.sleep(5*60)
+        print("TICK: {}".format(dt.now()))
+        time.sleep(15*60)
 
     db_conn.close()
