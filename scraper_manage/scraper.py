@@ -18,11 +18,11 @@ def proc_new_submissions(subs, existing_sub_ids, subs_subreddit, title_keywords,
 
     # GETTING SUBMISSION INFO
     new_sub_info = [[sub.fullname, sub.score, sub.upvote_ratio, sub.num_comments, 
-                     sub.locked, sub.title, sub.url] for sub in subs]
+                     sub.locked, sub.title, sub.url, sub.created_utc] for sub in subs]
     new_sub_info_df = pd.DataFrame(new_sub_info, 
                                    columns = ["sub_id", "num_ups", "up_ratio", 
                                               "num_comms", "is_sub_locked", "sub_title",
-                                              "sub_url"])
+                                              "sub_url", "ts_sub_created"])
     new_sub_info_df["subreddit"] = subs_subreddit
     new_sub_info_df["ts_first_polled"] = poll_datetime
     new_sub_info_df["ts_last_polled"] = poll_datetime
@@ -39,7 +39,7 @@ def proc_new_submissions(subs, existing_sub_ids, subs_subreddit, title_keywords,
         return None
     # print(new_sub_info_df)
     # CREATING THE TABLES TO WRITE
-    new_sub_admininfo = new_sub_info_df[["sub_id", "subreddit", "ts_first_polled", "ts_last_polled", "sub_title", "sub_url"]]
+    new_sub_admininfo = new_sub_info_df[["sub_id", "subreddit", "ts_first_polled", "ts_last_polled", "sub_title", "sub_url", "ts_sub_created"]]
     new_sub_info = new_sub_info_df[["sub_id", "ts_last_polled", "num_ups", "up_ratio", "num_comms", "is_sub_locked"]]
 
     # WRITING TABLES

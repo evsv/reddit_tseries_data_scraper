@@ -38,7 +38,8 @@ def init_db(db_file):
                                 ts_first_polled   string,
                                 ts_last_polled    string,
                                 sub_title         string,
-                                sub_url           string); """
+                                sub_url           string,
+                                ts_sub_created    string); """
     
     create_sub_data_table = """CREATE TABLE IF NOT EXISTS submission_data (
                                 sub_id         string,
