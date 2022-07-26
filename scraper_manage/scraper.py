@@ -159,3 +159,83 @@ def poll_subreddit(subreddit_to_poll, rdt_scraper, n_new_submissions,
                          sub_info_tname=sub_info_tname, poll_datetime=poll_time)
 
     return None
+
+def parse_commentforest(sub_info, comment_parsing_ts, subreddit, db_conn,
+                        comments_tname):
+
+    sub_comment_forest = sub_info[0]
+    sub_id = sub_info[1]
+
+    # REPLACING "more comment" OBJECTS
+    while True:
+        try:
+            sub_comment_forest.replace_more(limit = 15, threshold = 3)
+            break
+        except Exception as e:
+            message = "When expanding comments for submission {} in subreddit {}, exception {} occurred".format(sub_id, subreddit, e)
+            print(message)
+
+    # CHECKING FOR SUBMISSION IDS ALREADY ENTERED IN THE DATABASE
+    validation_query = """SELECT comment_id 
+                            FROM {}
+                           WHERE sub_id = \"{}\"""".format(comments_tname, sub_id)
+    existing_ids = pd.read_sql(validation_query, db_conn)
+    # print(list(existing_ids["comment_id"]))
+    
+    # GETTING COMMENT INFORMATION
+    sub_comments = [[comment.link_id, comment.id, comment.body]
+                        for comment in sub_comment_forest]
+
+    # FILTERING COMMENTS FOR COMMENTS NOT ALREADY ENTERED
+    ncomm_before_dropping_existing = len(sub_comments)
+    sub_comments = [comm_info for comm_info in sub_comments
+                        if comm_info[1] not in list(existing_ids["comment_id"])]
+    
+    if len(sub_comments) == 0:
+        # print("No new comments for submission {} in subreddit {}".format(sub_id, subreddit))
+        return
+    
+    ncomm_after_dropping_existing = len(sub_comments)
+    diff_ncomm = ncomm_before_dropping_existing - ncomm_after_dropping_existing
+    # print("Number of comments already in table for submission {} is {}".format(sub_id, diff_ncomm))
+
+    # CONVERTING TO DATAFRAME
+    sub_comments = [[comm_info[0], comm_info[1], comm_info[2]] 
+                        for comm_info in sub_comments]
+
+    sub_comments_df = pd.DataFrame(sub_comments, 
+                                   columns = ["sub_id", "comment_id", "comment_body"])
+    sub_comments_df["comment_polled_ts"] = comment_parsing_ts
+
+    return sub_comments_df    
+
+def poll_comments(rdt_scraper, db_connection, admin_recs_tname, comment_tname, 
+                  subreddit_to_poll):
+
+    poll_datetime = dt.now()
+
+    # GETTING SUBMISSIONS TO GET COMMENTS FOR
+    admin_ids_qry = """SELECT sub_id FROM submission_admin 
+                        WHERE subreddit =\"{}\";""".format(subreddit_to_poll)
+    admin_ids_table = pd.read_sql_query(admin_ids_qry, db_connection)
+
+    # GETTING COMMENTS FROM THE SELECTED SUBMISSIONS
+    subs_to_extr_comments = rdt_scraper.info(fullnames = list(admin_ids_table["sub_id"]))
+    sub_comments = [[sub.comments, sub.fullname] for sub in subs_to_extr_comments]
+
+    # PARSING COMMENTFORESTS TO GET DF OF COMMENTS
+    comment_info_df_list = [parse_commentforest(sub_info, poll_datetime, subreddit_to_poll, 
+                                                db_connection, "submission_comments") 
+                                for sub_info in sub_comments]
+    comment_info_df_list = [comment_info_df for comment_info_df in comment_info_df_list
+                                if comment_info_df is not None]
+    if len(comment_info_df_list) == 0:
+        message = """No new comments found for submissions in {} at 
+                     time {}""".format(subreddit_to_poll, poll_datetime)
+        print(message)
+        return None
+    
+    comment_info = pd.concat(comment_info_df_list)
+    comment_info.to_sql(comment_tname, db_connection, if_exists="append", index=False)
+
+

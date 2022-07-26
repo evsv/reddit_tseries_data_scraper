@@ -48,11 +48,27 @@ def init_db(db_file):
                                 up_ratio       int,
                                 num_comms      int, 
                                 is_sub_locked  string); """
+
+    create_sub_comments_table = """CREATE TABLE IF NOT EXISTS submission_comments (
+                                   sub_id            string,
+                                   comment_id        string,
+                                   comment_body      string,
+                                   comment_polled_ts string,
+                                   PRIMARY KEY (sub_id, comment_id)); """
     
+    create_user_table = """CREATE TABLE IF NOT EXISTS user_info (
+                           user_id         string PRIMARY KEY,
+                           user_name       string,
+                           comment_karma   int,
+                           link_karma      int,
+                           user_created_ts string);"""
+
     db_conn = init_db_file(db_file)
 
     create_table(db_conn, create_sub_admin_tbl, "submission_admin")
     create_table(db_conn, create_sub_data_table, "submission_data")
+    create_table(db_conn, create_sub_comments_table, "submission_comments")
+    create_table(db_conn, create_user_table, "user_info")
 
     db_conn.close()
 
