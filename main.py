@@ -40,14 +40,15 @@ if __name__ == "__main__":
         
         # Polling for comments - we poll every 1 hour, since comments 
         # are relatively expensive to poll
-        iter = iter+1
-        if iter == 4:
-            scrm.poll_comments(rdt_scraper=rdt_scraper, 
-                                db_connection=db_conn, 
-                                admin_recs_tname="submission_admin", 
-                                comment_tname="submission_comments", 
-                                subreddit_to_poll=sub)
-            iter = 0
+        # NOTE: Temporarily disabling this since comment polling hitting API limits - need a workaround
+        # iter = iter+1
+        # if iter == 4:
+        #     scrm.poll_comments(rdt_scraper=rdt_scraper, 
+        #                         db_connection=db_conn, 
+        #                         admin_recs_tname="submission_admin", 
+        #                         comment_tname="submission_comments", 
+        #                         subreddit_to_poll=sub)
+        #     iter = 0
 
         print("TICK: {}".format(dt.now()))
         time.sleep(15*60)
